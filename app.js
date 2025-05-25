@@ -30,6 +30,7 @@ socketHandler(io);
 
 // Routes
 app.get("/", (req, res) => {
+   console.log("API is running...");
   res.send("API is running...");
 });
  
