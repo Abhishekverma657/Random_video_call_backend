@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   plusMembership: { type: Boolean, default: false },
   isOnline: { type: Boolean, default: false },
   socketId: { type: String, default: '' },
+  country: { type: String, default: '' },
 
   createdAt: {
     type: Date,

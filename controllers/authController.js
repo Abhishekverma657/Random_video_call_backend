@@ -55,9 +55,9 @@ exports.googleLogin = async (req, res) => {
   }
 };
 
-exports.updateGenderAge = async (req, res) => {
+exports.updateGenderAgeCountry = async (req, res) => {
   try {
-    const { gender, age } = req.body;
+    const { gender, age,country } = req.body;
     const userId = req.user.id;  
 
     if (!gender || !age) {
@@ -66,7 +66,7 @@ exports.updateGenderAge = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { gender, age },
+      { gender, age,country },
       { new: true }
     );
 
@@ -80,6 +80,8 @@ exports.updateGenderAge = async (req, res) => {
         id: user._id,
         gender: user.gender,
         age: user.age,
+        country: user.country,
+
         plusMembership: user.plusMembership
       }
     });
@@ -108,6 +110,7 @@ exports.getProfile = async (req, res) => {
         photo: user.photo,
         age: user.age,
         gender: user.gender,
+        country:user.country,
         plusMembership: user.plusMembership,
         
        
