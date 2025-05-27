@@ -162,7 +162,7 @@ function socketHandler(io) {
             queue = queue.filter(u => u.uid !== user.uid);
             io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
             console.log(`⏰ Timeout for: ${user.name}`);
-          }, 60 * 1000) // 1 minute
+          }, 10 * 1000) // 1 minute
         };
 
         queue.push(queuedUser);
@@ -173,6 +173,37 @@ function socketHandler(io) {
         console.error('⚠️ Error in joinQueue:', err.message);
       }
     });
+    // ...existing code...
+socket.on('call-ended', async ({ to }) => {
+  // Notify peer
+  io.to(to).emit('call-ended', { message: 'Peer skipped/disconnected' });
+
+  // Remove both from activeCalls
+  if (activeCalls[socket.id]) delete activeCalls[socket.id];
+  if (activeCalls[to]) delete activeCalls[to];
+
+  // Peer ko queue me wapas daalo (turant searching pe bhejo)
+  try {
+    const peerUser = await User.findOne({ socketId: to });
+    if (peerUser) {
+      // Remove peer from queue if already present
+      queue = queue.filter(u => u.uid !== peerUser.uid);
+
+      // Add peer to queue with new timeout
+      queue.push({
+        ...peerUser.toObject(),
+        socketId: to,
+        timeout: setTimeout(() => {
+          queue = queue.filter(u => u.uid !== peerUser.uid);
+          io.to(to).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
+        }, 10 * 1000)
+      });
+      tryToMatch(io);
+    }
+  } catch (err) {
+    console.error('⚠️ Error in call-ended:', err.message);
+  }
+});
 
     // When a user disconnects
     socket.on('disconnect', async () => {
