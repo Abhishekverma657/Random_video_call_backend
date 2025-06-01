@@ -4,6 +4,8 @@ const cors = require("cors");
 const http = require('http');
 const dotenv = require("dotenv");
 const socketIO = require('socket.io');
+const fs = require('fs');
+const path = require('path');
 
 // Import your routes and handlers
 const authRoutes = require("./routes/authRoutes");
@@ -40,51 +42,12 @@ app.get("/", (req, res) => {
 // Auth routes
 app.use("/api/auth", authRoutes);
 
-// Serve a video playback page
-app.get("/video", (req, res) => {
-  const videoUrl = "https://bubbly.bigdaddy365.in/video/VID-20250515-WA0002.mp4";
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Video Player</title>
-    </head>
-    <body style="margin:0; padding:0; background:#000; display:flex; align-items:center; justify-content:center; height:100vh;">
-      <video width="720" height="480" controls autoplay>
-        <source src="${videoUrl}" type="video/mp4">
-        Your browser does not support the video tag.
-      </video>
-    </body>
-    </html>
-  `);
-});
-
-const fs = require('fs');
-const path = require('path');
-// ...existing code...
-
-// // List all videos in the /var/www/bubbly/video directory
-// app.get("/api/videos", (req, res) => {
-//   const videoDir = "/var/www/bubbly/video";
-//   fs.readdir(videoDir, (err, files) => {
-//     if (err) {
-//       return res.status(500).json({ error: "Unable to read video directory" });
-//     }
-//     // Filter only .mp4 files (optional)
-//     const videoFiles = files.filter(file => file.endsWith('.mp4'));
-//     // Create full URLs
-//     const videoUrls = videoFiles.map(file => ({
-//       name: file,
-//       url: `https://bubbly.bigdaddy365.in/video/${file}`
-//     }));
-//     res.json(videoUrls);
-//   });
-// });
-// // ...existing code...
 
 
-app.get('/video', (req, res) => {
-  fs.readFile(path.join(__dirname, 'video', 'video_content.json'), 'utf8', (err, jsonData) => {
+// API to serve video_content.json
+app.get('/api/videos/content', (req, res) => {
+  const jsonPath = path.join(__dirname, 'video', 'video_content.json');
+  fs.readFile(jsonPath, 'utf8', (err, jsonData) => {
     if (err) {
       return res.status(500).json({ error: 'File read error' });
     }
@@ -93,7 +56,22 @@ app.get('/video', (req, res) => {
   });
 });
 
-// Start the server
+// Uncomment if you want to list all videos from the directory
+// app.get("/api/videos", (req, res) => {
+//   const videoDir = "/var/www/bubbly/video";
+//   fs.readdir(videoDir, (err, files) => {
+//     if (err) {
+//       return res.status(500).json({ error: "Unable to read video directory" });
+//     }
+//     const videoFiles = files.filter(file => file.endsWith('.mp4'));
+//     const videoUrls = videoFiles.map(file => ({
+//       name: file,
+//       url: `https://bubbly.bigdaddy365.in/video/${file}`
+//     }));
+//     res.json(videoUrls);
+//   });
+// });
+
 const PORT = process.env.PORT || 5500;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
