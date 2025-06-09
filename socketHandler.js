@@ -188,7 +188,14 @@ function socketHandler(io) {
     if (gender) user.gender = gender;
     if (country) user.country = country;
     await user.save();
-
+     console.log('joinQueue:', {
+      uid,
+      gender,
+      country,
+      userGender: user.gender,
+      userCountry: user.country
+    });
+ 
     // Remove from queue if already present
     queue = queue.filter(u => u.uid !== user.uid);
      if (user.timeout) clearTimeout(user.timeout);
@@ -205,6 +212,11 @@ function socketHandler(io) {
       }, 5 * 1000)
     };
     queue.push(queuedUser);
+     console.log('Queue after join:', queue.map(u => ({
+      uid: u.uid,
+      gender: u.gender,
+      country: u.country
+    })));
     tryToMatch(io);
   } catch (err) {
     console.error('joinQueue error:', err.message);
@@ -364,6 +376,11 @@ function socketHandler(io) {
 
 function tryToMatch(io) {
   while (queue.length > 1) {
+    console.log('Matching queue:', queue.map(u => ({
+      uid: u.uid,
+      gender: u.gender,
+      country: u.country
+    })));
     const user1 = queue[0];
     let idx = queue.findIndex(u => {
       if (u.uid === user1.uid) return false;
@@ -380,7 +397,11 @@ function tryToMatch(io) {
       return genderMatch && countryMatch && canMatch(user1.uid, u.uid);
     });
 
-    if (idx === -1) break;
+     
+    if (idx === -1) {
+      console.log('No match found for:', user1.uid, user1.gender, user1.country);
+      break;
+    }
     const user2 = queue[idx];
     queue = queue.filter(u => u.uid !== user1.uid && u.uid !== user2.uid);
 
@@ -390,6 +411,7 @@ function tryToMatch(io) {
     const roomId = `${user1.uid}_${user2.uid}`;
     activeCalls[user1.socketId] = user2.socketId;
     activeCalls[user2.socketId] = user1.socketId;
+        console.log(`🎯 Matched: ${user1.uid} (${user1.gender}, ${user1.country}) <--> ${user2.uid} (${user2.gender}, ${user2.country})`);
 
     io.to(user1.socketId).emit('matched', {
       roomId,
