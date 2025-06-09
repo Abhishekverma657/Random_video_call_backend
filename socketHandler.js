@@ -281,7 +281,7 @@ function socketHandler(io) {
       // User khud bhi searching pe jayega
       if (user) {
         queue = queue.filter(u => u.uid !== user.uid);
-          if (peerUser.timeout) clearTimeout(peerUser.timeout);
+          if (user.timeout) clearTimeout(user.timeout);
         queue.push({
           ...user.toObject(),
           socketId: socket.id,
