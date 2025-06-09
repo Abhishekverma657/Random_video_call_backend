@@ -178,33 +178,71 @@ function canMatch(uid1, uid2) {
 
 function socketHandler(io) {
   io.on('connection', (socket) => {
-    // User joins queue
-    socket.on('joinQueue', async ({ uid }) => {
-      try {
-        const user = await User.findOne({ uid });
-        if (!user) return;
-        user.socketId = socket.id;
-        user.isOnline = true;
-        await user.save();
+    // User joins queue\\
+    socket.on('joinQueue', async ({ uid, gender, country }) => {
+  try {
+    const user = await User.findOne({ uid });
+    if (!user) return;
+    user.socketId = socket.id;
+    user.isOnline = true;
+    if (gender) user.gender = gender;
+    if (country) user.country = country;
+    await user.save();
 
-        // Remove from queue if already present
+    // Remove from queue if already present
+    queue = queue.filter(u => u.uid !== user.uid);
+
+    // Add to queue with gender/country
+    const queuedUser = {
+      ...user.toObject(),
+      socketId: socket.id,
+      gender: gender || user.gender,
+      country: country || user.country,
+      timeout: setTimeout(() => {
         queue = queue.filter(u => u.uid !== user.uid);
+        io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
+      }, 60 * 1000)
+    };
+    queue.push(queuedUser);
+    tryToMatch(io);
+  } catch (err) {
+    console.error('joinQueue error:', err.message);
+  }
+});
 
-        // Add to queue with timeout
-        const queuedUser = {
-          ...user.toObject(),
-          socketId: socket.id,
-          timeout: setTimeout(() => {
-            queue = queue.filter(u => u.uid !== user.uid);
-            io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-          }, 10 * 1000)
-        };
-        queue.push(queuedUser);
-        tryToMatch(io);
-      } catch (err) {
-        console.error('joinQueue error:', err.message);
-      }
-    });
+
+
+
+
+
+    // socket.on('joinQueue', async ({ uid,  gender, country }) => {
+    //   try {
+    //     const user = await User.findOne({ uid });
+    //     if (!user) return;
+    //     user.socketId = socket.id;
+    //     user.isOnline = true;
+    //      if (gender) user.gender = gender;
+    // if (country) user.country = country;
+    //     await user.save();
+
+    //     // Remove from queue if already present
+    //     queue = queue.filter(u => u.uid !== user.uid);
+
+    //     // Add to queue with timeout
+    //     const queuedUser = {
+    //       ...user.toObject(),
+    //       socketId: socket.id,
+    //       timeout: setTimeout(() => {
+    //         queue = queue.filter(u => u.uid !== user.uid);
+    //         io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
+    //       }, 10 * 1000)
+    //     };
+    //     queue.push(queuedUser);
+    //     tryToMatch(io);
+    //   } catch (err) {
+    //     console.error('joinQueue error:', err.message);
+    //   }
+    // });
 
     // Skip/Next or End Call
     socket.on('call-ended', async ({ to }) => {
@@ -233,8 +271,8 @@ function socketHandler(io) {
           socketId: to,
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== peerUser.uid);
-            io.to(to).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-          }, 10 * 1000)
+            io.to(to).emit('noMatchFound', { message: '❌ No match found in  5 sec' });
+          }, 5 * 1000)
         });
         tryToMatch(io);
       }
@@ -246,8 +284,8 @@ function socketHandler(io) {
           socketId: socket.id,
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== user.uid);
-            io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-          }, 10 * 1000)
+            io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 5 sec' });
+          }, 5 * 1000)
         });
         tryToMatch(io);
       }
@@ -285,10 +323,60 @@ function socketHandler(io) {
 }
 
 // Matching function with 1 min repeat block
+// function tryToMatch(io) {
+//   while (queue.length > 1) {
+//     const user1 = queue[0];
+//     let idx = queue.findIndex(u => u.uid !== user1.uid && canMatch(user1.uid, u.uid));
+//     if (idx === -1) break;
+//     const user2 = queue[idx];
+//     queue = queue.filter(u => u.uid !== user1.uid && u.uid !== user2.uid);
+
+//     clearTimeout(user1.timeout);
+//     clearTimeout(user2.timeout);
+
+//     const roomId = `${user1.uid}_${user2.uid}`;
+//     activeCalls[user1.socketId] = user2.socketId;
+//     activeCalls[user2.socketId] = user1.socketId;
+
+//     io.to(user1.socketId).emit('matched', {
+//       roomId,
+//       peerSocketId: user2.socketId,
+//       peerUid: user2.uid,
+//       isOfferer: true,
+//       remoteName: user2.name,
+//       remoteCountry: user2.country || '',
+//     });
+
+//     io.to(user2.socketId).emit('matched', {
+//       roomId,
+//       peerSocketId: user1.socketId,
+//       peerUid: user1.uid,
+//       isOfferer: false,
+//       remoteName: user1.name,
+//       remoteCountry: user1.country || ''
+//     });
+//   }
+// }
+
+
 function tryToMatch(io) {
   while (queue.length > 1) {
     const user1 = queue[0];
-    let idx = queue.findIndex(u => u.uid !== user1.uid && canMatch(user1.uid, u.uid));
+    let idx = queue.findIndex(u => {
+      if (u.uid === user1.uid) return false;
+
+      // Gender filter
+      const genderMatch =
+        (user1.gender === 'both' || u.gender === 'both' || user1.gender === u.gender);
+
+      // Country filter (if set)
+      const countryMatch =
+        (!user1.country || !u.country || user1.country === '' || u.country === '' || user1.country === u.country);
+
+      // Recent skip check (optional)
+      return genderMatch && countryMatch && canMatch(user1.uid, u.uid);
+    });
+
     if (idx === -1) break;
     const user2 = queue[idx];
     queue = queue.filter(u => u.uid !== user1.uid && u.uid !== user2.uid);
