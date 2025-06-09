@@ -35,8 +35,8 @@ socketHandler(io);
 
 // Base API route
 app.get("/", (req, res) => {
-  console.log("API is running...");
-  res.send("API is running...");
+  console.log("API is running... Welcome to Bubbly!(call problem fix ) ");
+  res.send("API is running... Welcome to Bubbly!");
 });
 
 // Auth routes
