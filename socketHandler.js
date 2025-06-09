@@ -185,8 +185,8 @@ function socketHandler(io) {
     if (!user) return;
     user.socketId = socket.id;
     user.isOnline = true;
-    if (gender) user.gender = gender;
-    if (country) user.country = country;
+    // if (gender) user.gender = gender;
+    // if (country) user.country = country;
     await user.save();
      console.log('joinQueue:', {
       uid,
@@ -204,8 +204,8 @@ function socketHandler(io) {
     const queuedUser = {
       ...user.toObject(),
       socketId: socket.id,
-      gender: gender || user.gender,
-      country: country || user.country,
+      filterGender: gender || 'both',   // Kis gender se match hona hai
+      filterCountry: (!country || country === 'Global') ? '' : country, 
       timeout: setTimeout(() => {
         queue = queue.filter(u => u.uid !== user.uid);
         io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
@@ -386,12 +386,11 @@ function tryToMatch(io) {
       if (u.uid === user1.uid) return false;
 
       // Gender filter
-      const genderMatch =
-        (user1.gender === 'both' || u.gender === 'both' || user1.gender === u.gender);
+  const genderMatch =
+  (user1.filterGender === 'both' || u.gender === 'both' || user1.filterGender === u.gender);
 
-      // Country filter (if set)
-      const countryMatch =
-        (!user1.country || !u.country || user1.country === '' || u.country === '' || user1.country === u.country);
+const countryMatch =
+  (!user1.filterCountry || !u.country || user1.filterCountry === '' || u.country === '' || user1.filterCountry === u.country);
 
       // Recent skip check (optional)
       return genderMatch && countryMatch && canMatch(user1.uid, u.uid);
