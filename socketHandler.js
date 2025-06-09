@@ -191,6 +191,7 @@ function socketHandler(io) {
 
     // Remove from queue if already present
     queue = queue.filter(u => u.uid !== user.uid);
+     if (user.timeout) clearTimeout(user.timeout);
 
     // Add to queue with gender/country
     const queuedUser = {
@@ -201,7 +202,7 @@ function socketHandler(io) {
       timeout: setTimeout(() => {
         queue = queue.filter(u => u.uid !== user.uid);
         io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-      }, 60 * 1000)
+      }, 5 * 1000)
     };
     queue.push(queuedUser);
     tryToMatch(io);
@@ -266,6 +267,7 @@ function socketHandler(io) {
       // Peer ko queue me wapas daalo (searching pe bhejo)
       if (peerUser) {
         queue = queue.filter(u => u.uid !== peerUser.uid);
+          if (peerUser.timeout) clearTimeout(peerUser.timeout);
         queue.push({
           ...peerUser.toObject(),
           socketId: to,
@@ -279,6 +281,7 @@ function socketHandler(io) {
       // User khud bhi searching pe jayega
       if (user) {
         queue = queue.filter(u => u.uid !== user.uid);
+          if (peerUser.timeout) clearTimeout(peerUser.timeout);
         queue.push({
           ...user.toObject(),
           socketId: socket.id,
