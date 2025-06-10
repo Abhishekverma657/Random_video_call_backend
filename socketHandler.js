@@ -197,27 +197,64 @@ function socketHandler(io) {
     });
  
     // Remove from queue if already present
-    queue = queue.filter(u => u.uid !== user.uid);
-     if (user.timeout) clearTimeout(user.timeout);
+    // queue = queue.filter(u => u.uid !== user.uid);
+    //  if (user.timeout) clearTimeout(user.timeout);
 
-    // Add to queue with gender/country
-    const queuedUser = {
-      ...user.toObject(),
-      socketId: socket.id,
-      filterGender: gender || 'both',   // Kis gender se match hona hai
-      filterCountry: (!country || country === 'Global') ? '' : country, 
-      timeout: setTimeout(() => {
-        queue = queue.filter(u => u.uid !== user.uid);
-        io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-      }, 5 * 1000)
-    };
-    queue.push(queuedUser);
-     console.log('Queue after join:', queue.map(u => ({
-      uid: u.uid,
-      gender: u.gender,
-      country: u.country
-    })));
-    tryToMatch(io);
+    // // Add to queue with gender/country
+    // const queuedUser = {
+    //   ...user.toObject(),
+    //   socketId: socket.id,
+    //   filterGender: gender || 'both',   // Kis gender se match hona hai
+    //   filterCountry: (!country || country === 'Global') ? '' : country, 
+    //   timeout: setTimeout(() => {
+    //     queue = queue.filter(u => u.uid !== user.uid);
+    //     io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
+    //   }, 5 * 1000)
+    // };
+    // queue.push(queuedUser);
+    //  console.log('Queue after join:', queue.map(u => ({
+    //   uid: u.uid,
+    //   gender: u.gender,
+    //   country: u.country
+    // })));
+    // tryToMatch(io);
+
+
+    // Remove from queue if already present
+queue = queue.filter(u => u.uid !== user.uid);
+if (user.timeout) clearTimeout(user.timeout);
+
+// Add to queue with gender/country filters
+const queuedUser = {
+  ...user.toObject(),
+  socketId: socket.id,
+  filterGender: gender || 'both', // User wants to match with this gender
+  filterCountry: (!country || country === 'Global') ? '' : country, // User wants to match with this country
+  timeout: setTimeout(() => {
+    queue = queue.filter(u => u.uid !== user.uid);
+    io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
+    console.log(`[TIMEOUT] No match found for ${user.uid} (${user.gender}, ${user.country}) with filterGender=${gender || 'both'}, filterCountry=${(!country || country === 'Global') ? 'Global' : country}`);
+  }, 60 * 1000) // 1 minute timeout
+};
+queue.push(queuedUser);
+
+console.log(`[QUEUE JOIN] ${user.uid} joined queue with filterGender=${queuedUser.filterGender}, filterCountry=${queuedUser.filterCountry || 'Global'}`);
+console.log('Current Queue:', queue.map(u => ({
+  uid: u.uid,
+  gender: u.gender,
+  country: u.country,
+  filterGender: u.filterGender,
+  filterCountry: u.filterCountry
+})));
+tryToMatch(io);
+
+
+
+
+
+
+
+
   } catch (err) {
     console.error('joinQueue error:', err.message);
   }
@@ -374,33 +411,100 @@ function socketHandler(io) {
 // }
 
 
-function tryToMatch(io) {
-  while (queue.length > 1) {
-    console.log('Matching queue:', queue.map(u => ({
-      uid: u.uid,
-      gender: u.gender,
-      country: u.country
-    })));
-    const user1 = queue[0];
-    let idx = queue.findIndex(u => {
-      if (u.uid === user1.uid) return false;
+// function tryToMatch(io) {
+//   while (queue.length > 1) {
+//     // console.log('Matching queue:', queue.map(u => ({
+//     //   uid: u.uid,
+//     //   gender: u.gender,
+//     //   country: u.country
+//     // })));
+//     const user1 = queue[0];
+//     let idx = queue.findIndex(u => {
+//       if (u.uid === user1.uid) return false;
 
-      // Gender filter
-  const genderMatch =
-  (user1.filterGender === 'both' || u.gender === 'both' || user1.filterGender === u.gender);
+//       // Gender filter
+//   const genderMatch =
+//   (user1.filterGender === 'both' || u.gender === 'both' || user1.filterGender === u.gender);
 
-const countryMatch =
-  (!user1.filterCountry || !u.country || user1.filterCountry === '' || u.country === '' || user1.filterCountry === u.country);
+// const countryMatch =
+//   (!user1.filterCountry || !u.country || user1.filterCountry === '' || u.country === '' || user1.filterCountry === u.country);
 
-      // Recent skip check (optional)
-      return genderMatch && countryMatch && canMatch(user1.uid, u.uid);
-    });
+//       // Recent skip check (optional)
+//       return genderMatch && countryMatch && canMatch(user1.uid, u.uid);
+//     });
 
      
+//     if (idx === -1) {
+//       console.log('No match found for:', user1.uid, user1.gender, user1.country);
+//       break;
+//     }
+//     const user2 = queue[idx];
+//     queue = queue.filter(u => u.uid !== user1.uid && u.uid !== user2.uid);
+
+//     clearTimeout(user1.timeout);
+//     clearTimeout(user2.timeout);
+
+//     const roomId = `${user1.uid}_${user2.uid}`;
+//     activeCalls[user1.socketId] = user2.socketId;
+//     activeCalls[user2.socketId] = user1.socketId;
+//         console.log(`🎯 Matched: ${user1.uid} (${user1.gender}, ${user1.country}) <--> ${user2.uid} (${user2.gender}, ${user2.country})`);
+
+//     io.to(user1.socketId).emit('matched', {
+//       roomId,
+//       peerSocketId: user2.socketId,
+//       peerUid: user2.uid,
+//       isOfferer: true,
+//       remoteName: user2.name,
+//       remoteCountry: user2.country || '',
+//     });
+
+//     io.to(user2.socketId).emit('matched', {
+//       roomId,
+//       peerSocketId: user1.socketId,
+//       peerUid: user1.uid,
+//       isOfferer: false,
+//       remoteName: user1.name,
+//       remoteCountry: user1.country || ''
+//     });
+//   }
+// }
+
+
+
+
+
+
+function tryToMatch(io) {
+  while (queue.length > 1) {
+    // Always pick the first user in queue
+    const user1 = queue[0];
+
+    // Find a user2 that matches user1's filters AND user2's filters
+    let idx = queue.findIndex((u, i) => {
+      if (i === 0) return false; // skip user1 itself
+
+      // user1 wants to match with u
+      const genderMatch1 = (user1.filterGender === 'both' || u.gender === 'both' || user1.filterGender === u.gender);
+      const countryMatch1 = (!user1.filterCountry || !u.country || user1.filterCountry === '' || u.country === '' || user1.filterCountry === u.country);
+
+      // u wants to match with user1
+      const genderMatch2 = (u.filterGender === 'both' || user1.gender === 'both' || u.filterGender === user1.gender);
+      const countryMatch2 = (!u.filterCountry || !user1.country || u.filterCountry === '' || user1.country === '' || u.filterCountry === user1.country);
+
+      // Recent skip check
+      const canBeMatched = genderMatch1 && countryMatch1 && genderMatch2 && countryMatch2 && canMatch(user1.uid, u.uid);
+
+      // Log every attempt
+      console.log(`[MATCH ATTEMPT] ${user1.uid} (${user1.gender}, ${user1.country}) [wants: ${user1.filterGender}, ${user1.filterCountry || 'Global'}] <--> ${u.uid} (${u.gender}, ${u.country}) [wants: ${u.filterGender}, ${u.filterCountry || 'Global'}] => ${canBeMatched ? 'MATCH' : 'NO MATCH'}`);
+
+      return canBeMatched;
+    });
+
     if (idx === -1) {
-      console.log('No match found for:', user1.uid, user1.gender, user1.country);
+      console.log(`[NO MATCH] No suitable match found for ${user1.uid} (${user1.gender}, ${user1.country}) with filterGender=${user1.filterGender}, filterCountry=${user1.filterCountry || 'Global'}`);
       break;
     }
+
     const user2 = queue[idx];
     queue = queue.filter(u => u.uid !== user1.uid && u.uid !== user2.uid);
 
@@ -410,7 +514,9 @@ const countryMatch =
     const roomId = `${user1.uid}_${user2.uid}`;
     activeCalls[user1.socketId] = user2.socketId;
     activeCalls[user2.socketId] = user1.socketId;
-        console.log(`🎯 Matched: ${user1.uid} (${user1.gender}, ${user1.country}) <--> ${user2.uid} (${user2.gender}, ${user2.country})`);
+
+    // Log the match
+    console.log(`[MATCHED] ${user1.uid} (${user1.gender}, ${user1.country}) <--> ${user2.uid} (${user2.gender}, ${user2.country}) | Room: ${roomId}`);
 
     io.to(user1.socketId).emit('matched', {
       roomId,
@@ -431,5 +537,6 @@ const countryMatch =
     });
   }
 }
+// ...existing code...
 
 module.exports = socketHandler;
