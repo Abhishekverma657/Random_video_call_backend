@@ -11,6 +11,7 @@ const path = require('path');
 const authRoutes = require("./routes/authRoutes");
 const socketHandler = require('./socketHandler');
 const connectDB = require('./config/db');
+const reportRoutes = require('./routes/reportRoute');
 
 dotenv.config();
 
@@ -41,6 +42,8 @@ app.get("/", (req, res) => {
 
 // Auth routes
 app.use("/api/auth", authRoutes);
+app.use('/api/report', reportRoutes);
+
 
 
 

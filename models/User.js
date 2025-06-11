@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: String,
   photo: String,
+  isBlocked: { type: Boolean, default: false },
   
    gender: { type: String, default: null },  
   age: { type: Number, default: null },     
