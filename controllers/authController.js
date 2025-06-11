@@ -111,6 +111,7 @@ exports.getProfile = async (req, res) => {
         age: user.age,
         gender: user.gender,
         country:user.country,
+        isBlocked: user.isBlocked,
         plusMembership: user.plusMembership,
         
        
