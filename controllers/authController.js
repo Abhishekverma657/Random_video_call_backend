@@ -111,6 +111,7 @@ exports.getProfile = async (req, res) => {
         age: user.age,
         gender: user.gender,
         country:user.country,
+      
         isBlocked: user.isBlocked,
         plusMembership: user.plusMembership,
         
@@ -121,4 +122,8 @@ exports.getProfile = async (req, res) => {
     console.error(error);
     return res.status(500).json({ message: "Server error", error });
   }
+
+
 };
+
+ 

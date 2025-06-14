@@ -234,7 +234,7 @@ const queuedUser = {
     queue = queue.filter(u => u.uid !== user.uid);
     io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
     console.log(`[TIMEOUT] No match found for ${user.uid} (${user.gender}, ${user.country}) with filterGender=${gender || 'both'}, filterCountry=${(!country || country === 'Global') ? 'Global' : country}`);
-  }, 60 * 1000) // 1 minute timeout
+  }, 5 * 1000) // 1 minute timeout
 };
 queue.push(queuedUser);
 
@@ -265,36 +265,7 @@ tryToMatch(io);
 
 
 
-    // socket.on('joinQueue', async ({ uid,  gender, country }) => {
-    //   try {
-    //     const user = await User.findOne({ uid });
-    //     if (!user) return;
-    //     user.socketId = socket.id;
-    //     user.isOnline = true;
-    //      if (gender) user.gender = gender;
-    // if (country) user.country = country;
-    //     await user.save();
-
-    //     // Remove from queue if already present
-    //     queue = queue.filter(u => u.uid !== user.uid);
-
-    //     // Add to queue with timeout
-    //     const queuedUser = {
-    //       ...user.toObject(),
-    //       socketId: socket.id,
-    //       timeout: setTimeout(() => {
-    //         queue = queue.filter(u => u.uid !== user.uid);
-    //         io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 1 minute' });
-    //       }, 10 * 1000)
-    //     };
-    //     queue.push(queuedUser);
-    //     tryToMatch(io);
-    //   } catch (err) {
-    //     console.error('joinQueue error:', err.message);
-    //   }
-    // });
-
-    // Skip/Next or End Call
+   
     socket.on('call-ended', async ({ to }) => {
       // Notify peer
       io.to(to).emit('call-ended', { message: 'Peer skipped/disconnected' });
