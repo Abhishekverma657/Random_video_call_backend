@@ -465,28 +465,58 @@ function tryToMatch(io) {
       if (i === 0) return false; // skip user1 itself
 
       // user1 wants to match with u
-    const genderMatch1 =
-  (user1.filterGender.toLowerCase() === 'both' ||
-   u.gender.toLowerCase() === 'both' ||
-   user1.filterGender.toLowerCase() === u.gender.toLowerCase());
+
+
+
+
+      const genderMatch1 =
+  ((user1.filterGender || 'both').toLowerCase() === 'both' ||
+   (u.gender || 'both').toLowerCase() === 'both' ||
+   (user1.filterGender || 'both').toLowerCase() === (u.gender || 'both').toLowerCase());
 
 const countryMatch1 =
   (!user1.filterCountry || !u.country ||
-   user1.filterCountry.toLowerCase() === '' ||
-   u.country.toLowerCase() === '' ||
-   user1.filterCountry.toLowerCase() === u.country.toLowerCase());
+   (user1.filterCountry || '').toLowerCase() === '' ||
+   (u.country || '').toLowerCase() === '' ||
+   (user1.filterCountry || '').toLowerCase() === (u.country || '').toLowerCase());
 
-// u wants to match with user1
 const genderMatch2 =
-  (u.filterGender.toLowerCase() === 'both' ||
-   user1.gender.toLowerCase() === 'both' ||
-   u.filterGender.toLowerCase() === user1.gender.toLowerCase());
+  ((u.filterGender || 'both').toLowerCase() === 'both' ||
+   (user1.gender || 'both').toLowerCase() === 'both' ||
+   (u.filterGender || 'both').toLowerCase() === (user1.gender || 'both').toLowerCase());
 
 const countryMatch2 =
   (!u.filterCountry || !user1.country ||
-   u.filterCountry.toLowerCase() === '' ||
-   user1.country.toLowerCase() === '' ||
-   u.filterCountry.toLowerCase() === user1.country.toLowerCase());
+   (u.filterCountry || '').toLowerCase() === '' ||
+   (user1.country || '').toLowerCase() === '' ||
+   (u.filterCountry || '').toLowerCase() === (user1.country || '').toLowerCase());
+
+
+
+
+
+//     const genderMatch1 =
+//   (user1.filterGender.toLowerCase() === 'both' ||
+//    u.gender.toLowerCase() === 'both' ||
+//    user1.filterGender.toLowerCase() === u.gender.toLowerCase());
+
+// const countryMatch1 =
+//   (!user1.filterCountry || !u.country ||
+//    user1.filterCountry.toLowerCase() === '' ||
+//    u.country.toLowerCase() === '' ||
+//    user1.filterCountry.toLowerCase() === u.country.toLowerCase());
+
+// // u wants to match with user1
+// const genderMatch2 =
+//   (u.filterGender.toLowerCase() === 'both' ||
+//    user1.gender.toLowerCase() === 'both' ||
+//    u.filterGender.toLowerCase() === user1.gender.toLowerCase());
+
+// const countryMatch2 =
+//   (!u.filterCountry || !user1.country ||
+//    u.filterCountry.toLowerCase() === '' ||
+//    user1.country.toLowerCase() === '' ||
+//    u.filterCountry.toLowerCase() === user1.country.toLowerCase());
 
       // Recent skip check
       const canBeMatched = genderMatch1 && countryMatch1 && genderMatch2 && countryMatch2 && canMatch(user1.uid, u.uid);
