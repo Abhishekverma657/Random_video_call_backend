@@ -123,6 +123,9 @@ tryToMatch(io);
         queue.push({
           ...peerUser.toObject(),
           socketId: to,
+           filterGender: peerUser.filterGender || 'both', 
+           filterCountry: peerUser.filterCountry || '',   
+
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== peerUser.uid);
             io.to(to).emit('noMatchFound', { message: '❌ No match found in  5 sec' });
@@ -138,6 +141,8 @@ tryToMatch(io);
         queue.push({
           ...user.toObject(),
           socketId: socket.id,
+            filterGender: user.filterGender || 'both',
+               filterCountry: user.filterCountry || '',
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== user.uid);
             io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 5 sec' });
