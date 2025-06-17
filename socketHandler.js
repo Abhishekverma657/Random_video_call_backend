@@ -180,6 +180,7 @@ function socketHandler(io) {
   io.on('connection', (socket) => {
     // User joins queue\\
     socket.on('joinQueue', async ({ uid, gender, country }) => {
+        console.log(`[SOCKET] joinQueue: ${uid}, gender=${gender}, country=${country}`);
   try {
     const user = await User.findOne({ uid });
     if (!user) return;
@@ -267,6 +268,7 @@ tryToMatch(io);
 
    
     socket.on('call-ended', async ({ to }) => {
+        console.log(`[SOCKET] call-ended: from=${socket.id}, to=${to}`);
       // Notify peer
       io.to(to).emit('call-ended', { message: 'Peer skipped/disconnected' });
       // Remove both from activeCalls
