@@ -224,6 +224,8 @@ function socketHandler(io) {
     // Remove from queue if already present
 queue = queue.filter(u => u.uid !== user.uid);
 if (user.timeout) clearTimeout(user.timeout);
+const oldUser = queue.find(u => u.uid === user.uid);
+if (oldUser && oldUser.timeout) clearTimeout(oldUser.timeout);
 
 // Add to queue with gender/country filters
 const queuedUser = {
@@ -290,6 +292,9 @@ tryToMatch(io);
       if (peerUser) {
         queue = queue.filter(u => u.uid !== peerUser.uid);
           if (peerUser.timeout) clearTimeout(peerUser.timeout);
+           const oldPeer = queue.find(u => u.uid === peerUser.uid);
+  if (oldPeer && oldPeer.timeout) clearTimeout(oldPeer.timeout);
+
         queue.push({
           ...peerUser.toObject(),
           socketId: to,
