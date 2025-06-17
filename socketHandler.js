@@ -296,6 +296,7 @@ tryToMatch(io);
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== peerUser.uid);
             io.to(to).emit('noMatchFound', { message: '❌ No match found in  5 sec' });
+              console.log(`[TIMEOUT] No match found for peerUser ${peerUser.uid} after call-ended`);
           }, 5 * 1000)
         });
         tryToMatch(io);
@@ -310,6 +311,8 @@ tryToMatch(io);
           timeout: setTimeout(() => {
             queue = queue.filter(u => u.uid !== user.uid);
             io.to(socket.id).emit('noMatchFound', { message: '❌ No match found in 5 sec' });
+             console.log(`[TIMEOUT] No match found for user ${user.uid} after call-ended`);
+
           }, 5 * 1000)
         });
         tryToMatch(io);
