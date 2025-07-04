@@ -31,6 +31,11 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+ 
+// This cron job will run every hour to check for VIP plan expirations
+require('./controllers/vipCron');
+
+
 // Initialize socket handling
 socketHandler(io);
 

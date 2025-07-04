@@ -125,5 +125,65 @@ exports.getProfile = async (req, res) => {
 
 
 };
+ 
+
+const PLAN_DURATIONS = {
+  weekly_plan: 7,
+  fifteen_day_plan: 15,
+  monthly_plan: 30
+};
+
+ 
+exports.updateVipInfo = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { purchasedAt, planName } = req.body;
+
+    const duration = PLAN_DURATIONS[planName];
+    if (!duration) {
+      return res.status(400).json({ message: "Invalid plan name" });
+    }
+
+    const purchasedDate = new Date(purchasedAt);
+    const expiresAt = new Date(purchasedDate);
+    expiresAt.setDate(expiresAt.getDate() + duration);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        vipInfo: {
+          purchasedAt: purchasedDate,
+          expiresAt,
+          
+          planName
+        },
+        plusMembership: true
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      vipInfo: updatedUser.vipInfo,
+      plusMembership: updatedUser.plusMembership
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+ 
+exports.getVipInfo = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("vipInfo plusMembership");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ success: true, vipInfo: user.vipInfo, plusMembership: user.plusMembership });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 
  

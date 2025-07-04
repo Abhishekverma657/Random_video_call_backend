@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
   isOnline: { type: Boolean, default: false },
   socketId: { type: String, default: '' },
   country: { type: String, default: '' },
+ vipInfo: {
+    purchasedAt: { type: Date, default: null },
+    expiresAt: { type: Date, default: null },
+    coins: { type: Number, default: 0 },
+    planName: { type: String, default: '' }
+  },
 
   createdAt: {
     type: Date,
